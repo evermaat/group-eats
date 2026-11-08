@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213D">
+<title>Group Eats</title>
+<meta name="description" content="Find a place to eat together: search, vote and decide live.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Group Eats">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="leaflet.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4z"/><path d="M9 4v14M15 6v14"/></symbol>
+    <symbol id="i-vote" viewBox="0 0 24 24"><path d="M7 11v9H4v-9h3zM7 11l4-7c1.7 0 2.6 1.2 2.2 2.8L12.6 10H18a2 2 0 012 2.3l-1.2 6A2 2 0 0116.8 20H7"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.8L12 3.5z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.4M12 18.8v2.4M21.2 12h-2.4M5.2 12H2.8M18.5 5.5l-1.7 1.7M7.2 16.8l-1.7 1.7M18.5 18.5l-1.7-1.7M7.2 7.2L5.5 5.5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0113 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+    <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.8" cy="9.5" r="2.5"/><path d="M15.5 14.2c2.4.1 4.2 1.7 4.8 4.3"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.6 2.6 2.6 14.4 0 17M12 3.5c-2.6 2.6-2.6 14.4 0 17"/></symbol>
+    <symbol id="i-route" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="6" r="2.2"/><path d="M8 18h7.5a3.5 3.5 0 000-7h-7a3.5 3.5 0 010-7H16"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="4" y="5.5" width="16" height="14" rx="2"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M5 4.5h11l3 3V20H5z"/><path d="M8.5 10h7M8.5 13.5h7M8.5 17h4"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/></symbol>
+    <symbol id="i-cards" viewBox="0 0 24 24"><rect x="6.5" y="4" width="11" height="16" rx="2"/><path d="M4 7v11M20 7v11"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3zM18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2z"/></symbol>
+    <symbol id="i-dice" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r=".9"/><circle cx="15" cy="15" r=".9"/><circle cx="15" cy="9" r=".9"/><circle cx="9" cy="15" r=".9"/><circle cx="12" cy="12" r=".9"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 006 6l1.5-2 4 1.5v3a2 2 0 01-2 2C10.5 19.5 4.5 13.5 4.5 5.5a2 2 0 012-2z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M8 7.5l4-4 4 4M5 12.5V19a1.5 1.5 0 001.5 1.5h11A1.5 1.5 0 0019 19v-6.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  </defs>
+</svg>
+
+<div id="netBanner" class="netbar hidden">You’re offline. Changes will sync when you reconnect.</div>
+
+<!-- ================= START ================= -->
+<section id="start" class="screen hidden">
+  <div class="start-hero">
+    <div class="orbit" aria-hidden="true">
+      <span>🥞</span><span>🍣</span><span>🌮</span><span>🍕</span><span>🥗</span><span>☕</span><span>🍜</span><span>🥐</span>
+    </div>
+    <div class="start-copy">
+      <div class="wordmark">Group Eats</div>
+      <h1 class="display">Where are we eating?</h1>
+      <p class="lede">Search anywhere, vote together, and decide before anyone gets hangry.</p>
+    </div>
+  </div>
+  <div class="start-body">
+    <div id="startUpd"></div>
+    <label class="field"><span>Your name</span><input id="nameInput" maxlength="24" placeholder="What should friends call you?" autocomplete="nickname"></label>
+    <div class="tile">
+      <h2>Start a table</h2>
+      <p class="muted">You’ll get a code to share with friends.</p>
+      <input id="titleInput" class="input" maxlength="40" placeholder="Saturday brunch">
+      <button class="btn tomato block" id="createBtn">Start and invite friends</button>
+    </div>
+    <div class="tile">
+      <h2>Join a table</h2>
+      <div class="codebox"><input id="codeInput" maxlength="9" placeholder="ABCD-2345" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="btn soft" id="pasteBtn">Paste</button></div>
+      <button class="btn ink block" id="joinBtn">Join table</button>
+    </div>
+    <div class="tile hidden" id="recentPanel"></div>
+    <div class="startlinks">
+      <button class="linkbtn" data-open="saved"><svg class="ic"><use href="#i-star"/></svg>Favorites and history</button>
+      <button class="linkbtn" data-open="settings"><svg class="ic"><use href="#i-gear"/></svg>Settings and API keys</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SESSION ================= -->
+<section id="session" class="screen hidden">
+  <header class="appbar">
+    <div class="appbar-row">
+      <div class="titleblock">
+        <h1 id="sTitle">Table</h1>
+        <div class="sub"><i id="syncDot" class="sync"></i><span id="sSub"></span></div>
+      </div>
+      <button class="pill tomato" id="inviteBtn"><svg class="ic"><use href="#i-plus"/></svg>Invite</button>
+      <button class="iconbtn" data-open="saved" aria-label="Favorites and history"><svg class="ic"><use href="#i-star"/></svg></button>
+      <button class="iconbtn" data-open="settings" aria-label="Settings"><svg class="ic"><use href="#i-gear"/></svg></button>
+    </div>
+    <div class="table-strip" id="tableStrip" role="button" aria-label="People at this table"></div>
+  </header>
+  <div id="deadlineBanner" class="deadline hidden"></div>
+  <div id="pickBanner" class="pickbanner hidden"></div>
+
+  <main class="tabs">
+    <!-- FIND -->
+    <div id="tab-find" class="tab">
+      <section class="composer" id="filtersPanel">
+        <label class="crave"><svg class="ic"><use href="#i-search"/></svg><input id="whatInput" placeholder="What are you craving?" enterkeyhint="search"></label>
+        <div class="scroller" id="whatChips"></div>
+        <div class="seg" id="whereSeg">
+          <button data-where="me"><svg class="ic"><use href="#i-pin"/></svg>Near me</button>
+          <button data-where="group"><svg class="ic"><use href="#i-people"/></svg>Near group</button>
+          <button data-where="place"><svg class="ic"><use href="#i-globe"/></svg>Somewhere</button>
+        </div>
+        <div id="placeRow" class="hidden"><input id="placeInput" class="input" placeholder="Neighborhood, address or city" enterkeyhint="search"></div>
+        <div class="hint" id="whereLabel"></div>
+        <div class="scroller" id="filterChips"></div>
+        <div class="hint diet" id="dietLine"></div>
+        <details class="more" id="moreFilters">
+          <summary><span>When, distance and sorting</span><span class="moresum" id="moreSummary"></span></summary>
+          <div class="grid2">
+            <label class="field"><span>When</span><select id="whenSel"><option value="now">Right now</option><option value="at">Pick a time</option></select></label>
+            <label class="field"><span>Distance</span><select id="radiusSel"><option value="0.8">½ mile</option><option value="1.6">1 mile</option><option value="3.2">2 miles</option><option value="8">5 miles</option><option value="16">10 miles</option><option value="40">25 miles</option></select></label>
+          </div>
+          <div class="grid2 hidden" id="whenRow">
+            <label class="field"><span>Day</span><input type="date" id="whenDate"></label>
+            <label class="field"><span>Time</span><input type="time" id="whenTime" step="900"></label>
+          </div>
+          <div class="grid2">
+            <label class="field"><span>Sort</span><select id="sortSel"><option value="best">Best match</option><option value="rating">Highest rated</option><option value="distance">Closest</option><option value="fair">Fairest for everyone</option></select></label>
+            <label class="field"><span>Getting there</span><select id="modeSel"><option value="walk">Walking</option><option value="transit">Transit</option><option value="drive">Driving</option></select></label>
+          </div>
+          <label class="field"><span>Party size</span><select id="partySel"><option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option><option>8</option><option>10+</option></select></label>
+        </details>
+        <button class="btn tomato block big" id="searchBtn">Search with the group</button>
+        <div class="hint center" id="searchNote">Everyone sees your filters and results as you go.</div>
+      </section>
+      <div id="results"></div>
+    </div>
+
+    <!-- MAP -->
+    <div id="tab-map" class="tab hidden">
+      <div id="mapWrap"><div id="map"></div><div class="maplegend" id="mapLegend"></div></div>
+    </div>
+
+    <!-- SHORTLIST -->
+    <div id="tab-list" class="tab hidden">
+      <section class="decide" id="votePanel"></section>
+      <div id="shortlist"></div>
+    </div>
+
+    <!-- GROUP -->
+    <div id="tab-group" class="tab hidden">
+      <section class="tile">
+        <div class="tilehead"><h2>At the table</h2><button class="btn soft small" id="invite2"><svg class="ic"><use href="#i-plus"/></svg>Invite</button></div>
+        <div id="members"></div>
+        <label class="switch"><input type="checkbox" id="shareLoc"><span class="track"></span><span>Share my location with this table</span></label>
+        <p class="hint">Used for “Near group”, fairest-spot ranking and arrival times.</p>
+      </section>
+      <section class="tile">
+        <h2>Chat</h2>
+        <form id="chatForm" class="chatform"><input id="chatInput" class="input" maxlength="300" placeholder="Message the table" enterkeyhint="send"><button class="btn tomato" aria-label="Send">Send</button></form>
+        <div id="feed"></div>
+      </section>
+      <section class="tile" id="alertsTile"></section>
+      <section class="tile quiet">
+        <p class="hint">Table code <b id="codeShow"></b>. Anyone with the code can see and post here. History stays on the sync relay for about 12 hours and on each phone.</p>
+        <div class="row"><button class="btn soft" id="copyCode">Copy code</button><button class="btn soft" id="leaveBtn">Leave table</button></div>
+      </section>
+    </div>
+  </main>
+
+  <nav class="dock" aria-label="Sections">
+    <button data-tab="find" class="active"><svg class="ic"><use href="#i-search"/></svg><span>Find</span></button>
+    <button data-tab="map"><svg class="ic"><use href="#i-map"/></svg><span>Map</span></button>
+    <button data-tab="list"><svg class="ic"><use href="#i-vote"/></svg><span>Decide</span><b id="listBadge" class="badge hidden"></b></button>
+    <button data-tab="group"><svg class="ic"><use href="#i-chat"/></svg><span>Table</span><b id="groupBadge" class="badge hidden"></b></button>
+  </nav>
+</section>
+
+<!-- ================= OVERLAYS ================= -->
+<div id="sheet" class="sheet hidden"><div class="sheetbody" id="sheetBody"></div></div>
+<div id="toast" class="toast hidden" role="status"></div>
+<div id="updBanner" class="updbanner hidden"></div>
+<div id="swipe" class="overlay swipe hidden"></div>
+<div id="spin" class="overlay spinwrap hidden">
+  <div class="spinbox">
+    <div class="spintitle" id="spinTitle">Spinning</div>
+    <div class="reel"><div id="spinName" class="spinname"></div></div>
+    <div class="hint" id="spinSub"></div>
+    <button class="btn tomato block hidden" id="spinClose">Let’s go</button>
+  </div>
+</div>
+
+<script src="leaflet.js"></script>
+<script src="opening_hours.min.js"></script>
+<script src="web-bridge.js"></script>
+<script src="core.js"></script>
+<script src="search.js"></script>
+<script src="ui.js"></script>
+<script src="extras.js"></script>
+<script src="ai.js"></script>
+<script src="boot.js"></script>
+<script src="web-extra.js"></script>
+</body>
+</html>
