@@ -254,7 +254,10 @@ function osmSearch(f, at, needs) {
   var q = '[out:json][timeout:20];nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|ice_cream)$"]["name"](around:' + r + ',' + at.lat.toFixed(5) + ',' + at.lng.toFixed(5) + ');out center tags 300;';
   var when = targetDate(f);
   var key0 = queryText(f).toLowerCase().trim();
-  return overpass(q).catch(function () { return nominatimPOIs(at, r, key0); }).then(function (j) {
+  // give the Overpass servers 12 s in total, then use Nominatim instead
+  var op = overpass(q); op.catch(function () {});
+  var slow = new Promise(function (res, rej) { setTimeout(function () { rej(new Error('slow')); }, 12000); });
+  return Promise.race([op, slow]).catch(function () { return nominatimPOIs(at, r, key0); }).then(function (j) {
     var key = key0;
     var syn = OSM_SYN[key], terms = syn ? syn : key.split(/[^a-z0-9]+/).filter(function (t) { return t.length > 1; });
     return (j.elements || []).map(function (el) {
