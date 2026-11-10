@@ -203,29 +203,59 @@ function enrichWithYelp(items, f, at) {
 }
 
 // ================================================================ OpenStreetMap (free, no ratings)
+// Overpass servers are often overloaded: start the next one every 4 s instead of waiting for a
+// failure, give each 20 s, and take the first good answer.
 function overpass(query) {
-  var errors = [], i = 0;
-  function attempt() {
-    if (i >= OVERPASS.length) {
-      var e = new Error('OpenStreetMap’s free servers are overloaded right now (' + errors.join(', ') + '). Try again in a minute, use a smaller distance, or add a Google or Yelp key in Settings for reliable search.');
-      return Promise.reject(e);
-    }
-    var url = OVERPASS[i++];
-    return req('POST', url, OSM_HEADERS, 'data=' + enc(query), '').then(function (r) {
-      var j = null; try { j = JSON.parse(r.body); } catch (e) {}
-      if (r.code === 200 && j && Array.isArray(j.elements) && !(j.remark && /runtime error|timed out/i.test(j.remark) && !j.elements.length)) return j;
-      errors.push(url.split('/')[2].replace(/^www\./, '') + ' ' + (r.code === 200 ? 'timeout' : r.code || 'no response'));
-      return attempt();
+  return new Promise(function (resolve, reject) {
+    var done = false, failed = 0, errors = [];
+    OVERPASS.forEach(function (url, i) {
+      setTimeout(function () {
+        if (done) return;
+        req('POST', url, OSM_HEADERS, 'data=' + enc(query), '', 20000).then(function (r) {
+          if (done) return;
+          var j = null; try { j = JSON.parse(r.body); } catch (e) {}
+          if (r.code === 200 && j && Array.isArray(j.elements) && !(j.remark && /runtime error|timed out/i.test(j.remark) && !j.elements.length)) { done = true; resolve(j); return; }
+          errors.push(url.split('/')[2] + ' ' + (r.code || 'timeout'));
+          if (++failed === OVERPASS.length) reject(new Error(errors.join(', ')));
+        });
+      }, i * 4000);
     });
+  });
+}
+// Fallback when every Overpass server is down: Nominatim's place search (1 request per type, spaced 1.1 s apart
+// per its usage policy). Returns Overpass-shaped elements so the same scoring code handles both.
+var NOMI_TYPES = { drinks: ['bar', 'pub', 'restaurant'], coffee: ['cafe'], dessert: ['ice_cream', 'cafe'], brunch: ['cafe', 'restaurant'], breakfast: ['cafe', 'restaurant'] };
+function nominatimPOIs(at, rM, key) {
+  var types = NOMI_TYPES[key] || ['restaurant', 'cafe'];
+  var dLat = rM / 111320, dLng = rM / (111320 * Math.cos(at.lat * Math.PI / 180)), box = [at.lng - dLng, at.lat + dLat, at.lng + dLng, at.lat - dLat].join(',');
+  var els = [], i = 0;
+  function next() {
+    if (i >= types.length) return Promise.resolve();
+    var t = types[i++];
+    return reqJSON('GET', 'https://nominatim.openstreetmap.org/search?format=jsonv2&amenity=' + t + '&extratags=1&addressdetails=1&limit=50&bounded=1&viewbox=' + box, NOMINATIM_H)
+      .then(function (j) {
+        (j || []).forEach(function (x) {
+          var e = x.extratags || {}, a = x.address || {}, tags = { name: x.name, amenity: x.type };
+          Object.keys(e).forEach(function (k) { tags[k] = e[k]; });
+          if (a.house_number) tags['addr:housenumber'] = a.house_number;
+          if (a.road) tags['addr:street'] = a.road;
+          if (a.city || a.town) tags['addr:city'] = a.city || a.town;
+          if (x.name) els.push({ type: (x.osm_type || 'n')[0], id: x.osm_id, lat: +x.lat, lon: +x.lon, tags: tags });
+        });
+      }).catch(function () {}).then(function () { return i < types.length ? new Promise(function (r) { setTimeout(r, 1100); }).then(next) : null; });
   }
-  return attempt();
+  return next().then(function () {
+    if (!els.length) throw new Error('OpenStreetMap search is unavailable right now. Try again in a minute, or ask someone with the Android app and API keys to search.');
+    return { elements: els };
+  });
 }
 function osmSearch(f, at, needs) {
   var r = Math.min(2500, Math.round(f.radius * 1000));
   var q = '[out:json][timeout:20];nwr["amenity"~"^(restaurant|cafe|fast_food|bar|pub|ice_cream)$"]["name"](around:' + r + ',' + at.lat.toFixed(5) + ',' + at.lng.toFixed(5) + ');out center tags 300;';
   var when = targetDate(f);
-  return overpass(q).then(function (j) {
-    var key = queryText(f).toLowerCase().trim();
+  var key0 = queryText(f).toLowerCase().trim();
+  return overpass(q).catch(function () { return nominatimPOIs(at, r, key0); }).then(function (j) {
+    var key = key0;
     var syn = OSM_SYN[key], terms = syn ? syn : key.split(/[^a-z0-9]+/).filter(function (t) { return t.length > 1; });
     return (j.elements || []).map(function (el) {
       var t = el.tags || {}, lat = el.lat != null ? el.lat : el.center && el.center.lat, lng = el.lon != null ? el.lon : el.center && el.center.lon;

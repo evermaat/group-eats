@@ -45,8 +45,12 @@ function avatar(m, cls) {
 var pending = {}, seq = 0;
 window.__appHttpCb = function (id, code, body) { var p = pending[id]; if (p) { delete pending[id]; p({ code: code, body: body }); } };
 window.__appLoc = function (id, json) { var p = pending[id]; if (p) { delete pending[id]; try { p(JSON.parse(json)); } catch (e) { p({ ok: false, error: 'Bad location' }); } } };
-function req(method, url, headers, body, auth) {
-  return new Promise(function (res) { var id = 'h' + (++seq); pending[id] = res; A.request(id, method, url, headers ? JSON.stringify(headers) : '', body || '', auth || ''); });
+function req(method, url, headers, body, auth, timeoutMs) {
+  return new Promise(function (res) {
+    var id = 'h' + (++seq); pending[id] = res;
+    setTimeout(function () { if (pending[id]) { delete pending[id]; res({ code: 0, body: 'timeout' }); } }, timeoutMs || 35000);
+    A.request(id, method, url, headers ? JSON.stringify(headers) : '', body || '', auth || '');
+  });
 }
 function reqJSON(method, url, headers, body, auth) {
   return req(method, url, headers, body, auth).then(function (r) {

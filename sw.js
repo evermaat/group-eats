@@ -1,5 +1,5 @@
 /* Group Eats (web) service worker: the app works offline; live data always comes from the network. */
-var CACHE = 'groupeats-2.5';
+var CACHE = 'groupeats-2.6';
 var SHELL = ["./", "ai.js", "app.css", "boot.js", "core.js", "extras.js", "fonts/bricolage.woff2", "fonts/figtree.woff2", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "index.html", "leaflet.css", "leaflet.js", "manifest.webmanifest", "opening_hours.min.js", "search.js", "ui.js", "web-bridge.js", "web-extra.js"];
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

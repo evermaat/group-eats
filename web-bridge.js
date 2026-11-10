@@ -3,7 +3,7 @@
   'use strict';
   if (window.AndroidApp) return;
   var NTFY = 'https://ntfy.sh/';
-  var VERSION = '2.5-web';
+  var VERSION = '2.6-web';
   function cb(fn) { var a = [].slice.call(arguments, 1); setTimeout(function () { if (window[fn]) window[fn].apply(null, a); }, 0); }
   function ls(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
 
@@ -91,7 +91,9 @@
       if (auth) { cb('__appHttpCb', id, -2, 'API keys live in the Android app'); return; }
       var h = {}; try { h = headersJson ? JSON.parse(headersJson) : {}; } catch (e) {}
       delete h.Referer; delete h['User-Agent'];
-      fetch(url, { method: method || 'GET', headers: h, body: body || undefined })
+      var ctl = window.AbortController ? new AbortController() : null;
+      if (ctl) setTimeout(function () { ctl.abort(); }, 40000);
+      fetch(url, { method: method || 'GET', headers: h, body: body || undefined, signal: ctl ? ctl.signal : undefined })
         .then(function (r) { return r.text().then(function (t) { cb('__appHttpCb', id, r.status, t); }); })
         .catch(function (e) { cb('__appHttpCb', id, 0, String((e && e.message) || e)); });
     },
