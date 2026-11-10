@@ -67,7 +67,7 @@ if (!me) { me = { id: rnd(10), name: '', diet: [] }; lsSet('ge:me', me); }
 if (!me.diet) me.diet = [];
 var prefs = lsGet('ge:prefs', { appLink: '', updateSrc: '' });
 // built-in links (published on GitHub): used unless the user sets their own in Settings
-var DEFAULT_LINKS = { webLink: 'https://evermaat.github.io/group-eats/', appLink: 'https://github.com/evermaat/group-eats/releases/latest/download/Group-Eats.apk', updateSrc: 'evermaat/group-eats' };
+var DEFAULT_LINKS = { webLink: 'https://evermaat.github.io/group-eats/', appLink: 'https://evermaat.github.io/group-eats/Group-Eats.apk', updateSrc: 'https://evermaat.github.io/group-eats/update.json' };
 Object.keys(DEFAULT_LINKS).forEach(function (k) { if (!prefs[k]) prefs[k] = DEFAULT_LINKS[k]; });
 var recents = lsGet('ge:recents', []);
 var S = null, myLoc = null;
